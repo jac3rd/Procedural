@@ -31,22 +31,25 @@ public class Generation : MonoBehaviour
             while(Vector3.Distance(position,Vector3.zero) > 1)
                 position = new Vector3(Random.Range(-1f,1f),Random.Range(-1f,1f),0);
             GameObject room = GameObject.Instantiate(Room,position,new Quaternion());
-            BoxCollider2D boxCollider2D = room.GetComponent<BoxCollider2D>();
-            boxCollider2D.size = new Vector2(Random.Range(minSize,maxSize+2), Random.Range(minSize,maxSize));
-            //room.GetComponent<SpriteRenderer>().size = boxCollider2D.size;
+            room.GetComponent<BoxCollider2D>().size = new Vector2(Random.Range(minSize,maxSize+2), Random.Range(minSize,maxSize));
             room.transform.parent = transform;
         }
         waitRoomsSettle = true;
     }
 
     void CullRooms() {
-        for(int i = transform.childCount-1; i >= 0; i--)
+        for(int i = transform.childCount-1; i >= 0; i--) {
             if(Random.Range(0,1f) <= cull)
                 DestroyImmediate(transform.GetChild(i).gameObject);
+            else
+                transform.GetChild(i).GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+        }
         FillWorld();
         GenerateHalls();
         DrawRooms();
         DrawHalls();
+        for(int i = transform.childCount-1; i >= 0; i--)
+            DestroyImmediate(transform.GetChild(i).gameObject);
     }
 
     void FillWorld() {
