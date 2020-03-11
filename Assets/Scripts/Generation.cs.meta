@@ -5,6 +5,8 @@ MonoImporter:
   serializedVersion: 2
   defaultReferences:
   - Room: {fileID: 6992125927433399654, guid: ee18e1e75f591484690ca0d299fd2276, type: 3}
+  - tilemap: {instanceID: 0}
+  - tileBase: {fileID: 11400000, guid: fa71ed89fcc954fd19467c5a1011b9f6, type: 2}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

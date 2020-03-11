@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class Generation : MonoBehaviour
 {
@@ -13,8 +14,10 @@ public class Generation : MonoBehaviour
     private float settleStableTimeHelper = 0;
     private int prevOverlaps = -1;
     public float cull = 0.5f;
+    private LinkedList<Vector3[]> halls = new LinkedList<Vector3[]>();
+    public Tilemap tilemap;
+    public TileBase tileBase;
 
-    // Start is called before the first frame update
     void Start() {
         Random.InitState(System.Environment.TickCount);
         GenerateRooms();
@@ -22,23 +25,102 @@ public class Generation : MonoBehaviour
 
     void GenerateRooms() {
         for(int i = 0; i < numRooms; i++) {
-            GameObject room = GameObject.Instantiate(Room);
+            Vector3 position = new Vector3(Random.Range(-1f,1f),Random.Range(-1f,1f),0);
+            while(Vector3.Distance(position,Vector3.zero) > 1)
+                position = new Vector3(Random.Range(-1f,1f),Random.Range(-1f,1f),0);
+            GameObject room = GameObject.Instantiate(Room,position,new Quaternion());
             BoxCollider2D boxCollider2D = room.GetComponent<BoxCollider2D>();
             boxCollider2D.size = new Vector2(Random.Range(minSize,maxSize+1), Random.Range(minSize,maxSize));
-            room.GetComponent<SpriteRenderer>().size = boxCollider2D.size;
+            //room.GetComponent<SpriteRenderer>().size = boxCollider2D.size;
             room.transform.parent = transform;
         }
         waitRoomsSettle = true;
     }
 
     void CullRooms() {
-        for(int i = 0; i < numRooms; i++)
+        for(int i = transform.childCount-1; i >= 0; i--)
             if(Random.Range(0,1f) <= cull)
-                Destroy(transform.GetChild(i).gameObject);
+                DestroyImmediate(transform.GetChild(i).gameObject);
+        FillWorld();
+        GenerateHalls();
+        DrawRooms();
+        DrawHalls();
     }
 
-    // Update is called once per frame
-    void Update() {
+    void FillWorld() {
+        Vector3 min = new Vector3(float.PositiveInfinity,float.PositiveInfinity);
+        Vector3 max = new Vector3(float.NegativeInfinity,float.NegativeInfinity);
+        for(int i = 0; i < transform.childCount; i++) {
+            Bounds bounds = transform.GetChild(i).GetComponent<Collider2D>().bounds;
+            min = new Vector3(Mathf.Min(min.x,bounds.min.x),Mathf.Min(min.y,bounds.min.y),0);
+            max = new Vector3(Mathf.Max(max.x,bounds.max.x),Mathf.Max(max.y,bounds.max.y),0);
+        }
+        Vector3Int minCell = Vector3Int.FloorToInt(min);
+        Vector3Int maxCell = Vector3Int.FloorToInt(max);
+        for(int x = minCell.x; x <= maxCell.x; x++)
+            for(int y = minCell.y; y <= maxCell.y; y++)
+                tilemap.SetTile(new Vector3Int(x,y,0), tileBase);
+    }
+
+    void GenerateHalls() {
+        LinkedList<Vector3> positions = new LinkedList<Vector3>();
+        for(int i = 0; i < transform.childCount; i++)
+            positions.AddLast(transform.GetChild(i).position);
+        LinkedList<Vector3> mstNodes = new LinkedList<Vector3>();
+        mstNodes.AddLast(positions.First.Value);
+        positions.RemoveFirst();
+        while(positions.Count > 0) {
+            float minDist = float.PositiveInfinity;
+            Vector3 minPos = new Vector3();
+            Vector3 pos = new Vector3();
+            foreach(Vector3 p1 in mstNodes)
+                foreach(Vector3 p2 in positions) {
+                    float dist = Vector3.Distance(p1,p2);
+                    if(dist < minDist) {
+                        minDist = dist;
+                        minPos = p2;
+                        pos = p1;
+                    }
+                }
+            mstNodes.AddLast(minPos);
+            halls.AddLast(new Vector3[2]);
+            halls.Last.Value[0] = pos;
+            halls.Last.Value[1] = minPos;
+            positions.Remove(minPos);
+        }
+        DrawRooms();
+    }
+
+    void DrawRooms() {
+        for(int i = 0; i < transform.childCount; i++) {
+            Bounds bounds = transform.GetChild(i).GetComponent<Collider2D>().bounds;
+            Vector3Int min = tilemap.WorldToCell(bounds.min);
+            Vector3Int max = tilemap.WorldToCell(bounds.max);
+            for(int x = min.x+1; x < max.x; x++)
+                for(int y = min.y+1; y < max.y; y++)
+                    tilemap.SetTile(new Vector3Int(x,y,0), null);
+        }
+    }
+
+    void DrawHalls() {
+        foreach(Vector3[] hall in halls) {
+            Vector3Int room1 = Vector3Int.RoundToInt(hall[0]);
+            Vector3Int room2 = Vector3Int.RoundToInt(hall[1]);
+            if(Random.Range(0,2) == 0) {
+                for(int x = room1.x; x != room2.x; x += (int)Mathf.Sign(room2.x-room1.x))
+                    tilemap.SetTile(new Vector3Int(x,room1.y,0), null);
+                for(int y = room1.y; y != room2.y; y += (int)Mathf.Sign(room2.y-room1.y))
+                    tilemap.SetTile(new Vector3Int(room2.x,y,0), null);
+            } else {
+                for(int y = room1.y; y != room2.y; y += (int)Mathf.Sign(room2.y-room1.y))
+                    tilemap.SetTile(new Vector3Int(room1.x,y,0), null);
+                for(int x = room1.x; x != room2.x; x += (int)Mathf.Sign(room2.x-room1.x))
+                    tilemap.SetTile(new Vector3Int(x,room2.y,0), null);
+            }
+        }
+    }
+
+    void FixedUpdate() {
         if(waitRoomsSettle) {
             int overlaps = 0;
             ContactFilter2D contactFilter2D = new ContactFilter2D();
@@ -46,9 +128,8 @@ public class Generation : MonoBehaviour
                 Collider2D[] results = new Collider2D[4];
                 overlaps += transform.GetChild(i).GetComponent<Rigidbody2D>().OverlapCollider(contactFilter2D,results);
             }
-            Debug.Log(overlaps);
             if(overlaps == prevOverlaps) {
-                settleStableTimeHelper += Time.deltaTime;
+                settleStableTimeHelper += Time.fixedDeltaTime;
                 if(settleStableTimeHelper >= settleStableTime) {
                     waitRoomsSettle = false;
                     CullRooms();
