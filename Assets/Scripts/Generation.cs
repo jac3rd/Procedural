@@ -32,7 +32,7 @@ public class Generation : MonoBehaviour
                 position = new Vector3(Random.Range(-1f,1f),Random.Range(-1f,1f),0);
             GameObject room = GameObject.Instantiate(Room,position,new Quaternion());
             BoxCollider2D boxCollider2D = room.GetComponent<BoxCollider2D>();
-            boxCollider2D.size = new Vector2(Random.Range(minSize,maxSize+1), Random.Range(minSize,maxSize));
+            boxCollider2D.size = new Vector2(Random.Range(minSize,maxSize+2), Random.Range(minSize,maxSize));
             //room.GetComponent<SpriteRenderer>().size = boxCollider2D.size;
             room.transform.parent = transform;
         }
