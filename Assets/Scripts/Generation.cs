@@ -8,6 +8,12 @@ public class Generation : MonoBehaviour
     public int minSize = 4;
     public int maxSize = 10;
     public GameObject Room;
+    private bool waitRoomsSettle = false;
+    public float settleStableTime = 2;
+    private float settleStableTimeHelper = 0;
+    private int prevOverlaps = -1;
+    public float cull = 0.5f;
+
     // Start is called before the first frame update
     void Start() {
         Random.InitState(System.Environment.TickCount);
@@ -22,16 +28,35 @@ public class Generation : MonoBehaviour
             room.GetComponent<SpriteRenderer>().size = boxCollider2D.size;
             room.transform.parent = transform;
         }
+        waitRoomsSettle = true;
+    }
+
+    void CullRooms() {
+        for(int i = 0; i < numRooms; i++)
+            if(Random.Range(0,1f) <= cull)
+                Destroy(transform.GetChild(i).gameObject);
     }
 
     // Update is called once per frame
     void Update() {
-        int overlaps = 0;
-        ContactFilter2D contactFilter2D = new ContactFilter2D();
-        for(int i = 0; i < transform.childCount; i++) {
-            Collider2D[] results = new Collider2D[4];
-            overlaps += transform.GetChild(i).GetComponent<Rigidbody2D>().OverlapCollider(contactFilter2D,results);
+        if(waitRoomsSettle) {
+            int overlaps = 0;
+            ContactFilter2D contactFilter2D = new ContactFilter2D();
+            for(int i = 0; i < transform.childCount; i++) {
+                Collider2D[] results = new Collider2D[4];
+                overlaps += transform.GetChild(i).GetComponent<Rigidbody2D>().OverlapCollider(contactFilter2D,results);
+            }
+            Debug.Log(overlaps);
+            if(overlaps == prevOverlaps) {
+                settleStableTimeHelper += Time.deltaTime;
+                if(settleStableTimeHelper >= settleStableTime) {
+                    waitRoomsSettle = false;
+                    CullRooms();
+                }
+            }
+            else
+                settleStableTimeHelper = 0;
+            prevOverlaps = overlaps;
         }
-        Debug.Log(overlaps);
     }
 }
