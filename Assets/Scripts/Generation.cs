@@ -17,6 +17,8 @@ public class Generation : MonoBehaviour
     private LinkedList<Vector3[]> halls = new LinkedList<Vector3[]>();
     public Tilemap tilemap;
     public TileBase tileBase;
+    private Vector3Int minCell;
+    private Vector3Int maxCell;
 
     void Start() {
         Random.InitState(System.Environment.TickCount);
@@ -55,8 +57,8 @@ public class Generation : MonoBehaviour
             min = new Vector3(Mathf.Min(min.x,bounds.min.x),Mathf.Min(min.y,bounds.min.y),0);
             max = new Vector3(Mathf.Max(max.x,bounds.max.x),Mathf.Max(max.y,bounds.max.y),0);
         }
-        Vector3Int minCell = Vector3Int.FloorToInt(min);
-        Vector3Int maxCell = Vector3Int.FloorToInt(max);
+        minCell = Vector3Int.FloorToInt(min);
+        maxCell = Vector3Int.FloorToInt(max);
         for(int x = minCell.x; x <= maxCell.x; x++)
             for(int y = minCell.y; y <= maxCell.y; y++)
                 tilemap.SetTile(new Vector3Int(x,y,0), tileBase);
