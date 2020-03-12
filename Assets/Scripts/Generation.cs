@@ -15,7 +15,8 @@ public class Generation : MonoBehaviour
     private int prevOverlaps = -1;
     public float cull = 0.0f;
     private LinkedList<Vector3[]> halls = new LinkedList<Vector3[]>();
-    public Tilemap tilemap;
+    private Dictionary<GameObject,LinkedList<GameObject>> adjList = new Dictionary<GameObject, LinkedList<GameObject>>();
+    public Tilemap walls, backgrounds;
     public TileBase tileBase;
     private Vector3Int minCell;
     private Vector3Int maxCell;
@@ -40,7 +41,7 @@ public class Generation : MonoBehaviour
 
     void CullRooms() {
         for(int i = transform.childCount-1; i >= 0; i--) {
-            if(Random.Range(0,1f) <= cull)
+            if(Random.Range(0,1f) < cull)
                 DestroyImmediate(transform.GetChild(i).gameObject);
             else {
                 BoxCollider2D collider2D = transform.GetChild(i).GetComponent<BoxCollider2D>();
@@ -52,7 +53,8 @@ public class Generation : MonoBehaviour
                 transform.GetChild(i).position = new Vector3(xCenter,yCenter,0);
             }
         }
-        FillWorld();
+        //FillWorld();
+        GetAdjancencies();
         //GenerateHalls();
         DrawRooms();
         //DrawHalls();
@@ -65,6 +67,7 @@ public class Generation : MonoBehaviour
     }
 
     void FillWorld() {
+        walls.gameObject.GetComponent<TilemapCollider2D>().enabled = false;
         Vector3 min = new Vector3(float.PositiveInfinity,float.PositiveInfinity);
         Vector3 max = new Vector3(float.NegativeInfinity,float.NegativeInfinity);
         for(int i = 0; i < transform.childCount; i++) {
@@ -76,10 +79,36 @@ public class Generation : MonoBehaviour
         maxCell = Vector3Int.FloorToInt(max);
         for(int x = minCell.x-1; x <= maxCell.x; x++)
             for(int y = minCell.y-1; y <= maxCell.y; y++)
-                tilemap.SetTile(new Vector3Int(x,y,0), tileBase);
+                walls.SetTile(new Vector3Int(x,y,0), tileBase);
     }
 
-    void GenerateHalls() {
+    void GetAdjancencies() {
+        Vector3 cellSize = GameObject.Find("Grid").GetComponent<Grid>().cellSize;
+        for(int i = 0; i < transform.childCount; i++) {
+            GameObject room = transform.GetChild(i).gameObject;
+            adjList.Add(room, new LinkedList<GameObject>());
+            BoxCollider2D roomCol = room.GetComponent<BoxCollider2D>();
+            for(float x = roomCol.bounds.min.x + cellSize.x/2; x < roomCol.bounds.max.x; x += cellSize.x) {
+                Collider2D down = Physics2D.Raycast(new Vector2(x,roomCol.bounds.min.y - cellSize.y/2), Vector2.down, cellSize.y).collider;
+                Collider2D up = Physics2D.Raycast(new Vector2(x,roomCol.bounds.max.y + cellSize.y/2), Vector2.up, cellSize.y).collider;
+                if(down != null && !adjList[room].Contains(down.gameObject))
+                    adjList[room].AddLast(down.gameObject);
+                if(up != null && !adjList[room].Contains(up.gameObject))
+                    adjList[room].AddLast(up.gameObject);
+            }   
+            for(float y = roomCol.bounds.min.y + cellSize.y/2; y < roomCol.bounds.max.y; y += cellSize.y) {
+                Collider2D left = Physics2D.Raycast(new Vector2(roomCol.bounds.min.x - cellSize.x/2,y), Vector2.left, cellSize.x).collider;
+                Collider2D right = Physics2D.Raycast(new Vector2(roomCol.bounds.max.x + cellSize.x/2,y), Vector2.right, cellSize.x).collider;
+                if(left != null && !adjList[room].Contains(left.gameObject))
+                    adjList[room].AddLast(left.gameObject);
+                if(right != null && !adjList[room].Contains(right.gameObject))
+                    adjList[room].AddLast(right.gameObject);
+            }
+        }
+        walls.gameObject.GetComponent<TilemapCollider2D>().enabled = true;
+    }
+
+    void GenerateHallsPrim() {
         LinkedList<Vector3> positions = new LinkedList<Vector3>();
         for(int i = 0; i < transform.childCount; i++)
             positions.AddLast(transform.GetChild(i).position);
@@ -108,13 +137,31 @@ public class Generation : MonoBehaviour
     }
 
     void DrawRooms() {
+        Gradient gradient = new Gradient();
+        GradientColorKey[] colorKeys = new GradientColorKey[2];
+        colorKeys[0].color = Color.red;
+        colorKeys[0].time = 0f;
+        colorKeys[1].color = Color.blue;
+        colorKeys[1].time = 1f;
+        GradientAlphaKey[] alphaKeys = new GradientAlphaKey[2];
+        alphaKeys[0].alpha = 1f;
+        alphaKeys[0].time = 0f;
+        alphaKeys[1].alpha = 1f;
+        alphaKeys[1].time = 1f;
+        gradient.SetKeys(colorKeys, alphaKeys);
         for(int i = 0; i < transform.childCount; i++) {
             Bounds bounds = transform.GetChild(i).GetComponent<Collider2D>().bounds;
-            Vector3Int min = tilemap.WorldToCell(bounds.min);
-            Vector3Int max = tilemap.WorldToCell(bounds.max);
+            Vector3Int min = walls.WorldToCell(bounds.min);
+            Vector3Int max = walls.WorldToCell(bounds.max);
+            float heat = adjList[transform.GetChild(i).gameObject].Count/4f;
             for(int x = min.x; x < max.x; x++)
-                for(int y = min.y; y < max.y; y++)
-                    tilemap.SetTile(new Vector3Int(x,y,0), null);
+                for(int y = min.y; y < max.y; y++) {
+                    Vector3Int cellPos = new Vector3Int(x,y,0);
+                    backgrounds.SetTile(cellPos, tileBase);
+                    walls.SetTile(cellPos, null);
+                    backgrounds.SetTileFlags(cellPos, TileFlags.None);
+                    backgrounds.SetColor(cellPos, gradient.Evaluate(heat));
+                }
         }
     }
 
@@ -124,21 +171,21 @@ public class Generation : MonoBehaviour
             Vector3Int room2 = Vector3Int.RoundToInt(hall[1]);
             if(Random.value < 0.5) {
                 for(int x = room1.x; x != room2.x+(int)Mathf.Sign(room2.x-room1.x); x += (int)Mathf.Sign(room2.x-room1.x)) {
-                    tilemap.SetTile(new Vector3Int(x,room1.y,0), null);
-                    tilemap.SetTile(new Vector3Int(x,room1.y-1,0), null);
+                    backgrounds.SetTile(new Vector3Int(x,room1.y,0), null);
+                    backgrounds.SetTile(new Vector3Int(x,room1.y-1,0), null);
                 }
                 for(int y = room1.y; y != room2.y+(int)Mathf.Sign(room2.y-room1.y); y += (int)Mathf.Sign(room2.y-room1.y)) {
-                    tilemap.SetTile(new Vector3Int(room2.x,y,0), null);
-                    tilemap.SetTile(new Vector3Int(room2.x-1,y,0), null);
+                    backgrounds.SetTile(new Vector3Int(room2.x,y,0), null);
+                    backgrounds.SetTile(new Vector3Int(room2.x-1,y,0), null);
                 }
             } else {
                 for(int y = room1.y; y != room2.y+(int)Mathf.Sign(room2.y-room1.y); y += (int)Mathf.Sign(room2.y-room1.y)) {
-                    tilemap.SetTile(new Vector3Int(room1.x,y,0), null);
-                    tilemap.SetTile(new Vector3Int(room1.x-1,y,0), null);
+                    backgrounds.SetTile(new Vector3Int(room1.x,y,0), null);
+                    backgrounds.SetTile(new Vector3Int(room1.x-1,y,0), null);
                 }
                 for(int x = room1.x; x != room2.x+(int)Mathf.Sign(room2.x-room1.x); x += (int)Mathf.Sign(room2.x-room1.x)) {
-                    tilemap.SetTile(new Vector3Int(x,room2.y,0), null);
-                    tilemap.SetTile(new Vector3Int(x,room2.y-1,0), null);
+                    backgrounds.SetTile(new Vector3Int(x,room2.y,0), null);
+                    backgrounds.SetTile(new Vector3Int(x,room2.y-1,0), null);
                 }
             }
         }
