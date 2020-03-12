@@ -167,6 +167,7 @@ GameObject:
   - component: {fileID: 519420032}
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
+  - component: {fileID: 519420030}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -182,6 +183,19 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_Enabled: 1
+--- !u!114 &519420030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b28b036a14704023821a6e892ec5cc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  offset: {x: 0, y: 0, z: -10}
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0
@@ -248,6 +262,7 @@ GameObject:
   m_Component:
   - component: {fileID: 554447893}
   - component: {fileID: 554447892}
+  - component: {fileID: 554447894}
   m_Layer: 0
   m_Name: Rooms
   m_TagString: Untagged
@@ -271,10 +286,11 @@ MonoBehaviour:
   minSize: 4
   maxSize: 10
   Room: {fileID: 6992125927433399654, guid: ee18e1e75f591484690ca0d299fd2276, type: 3}
-  settleStableTime: 2
-  cull: 0.5
+  settleStableTime: 4
+  cull: 0.1
   tilemap: {fileID: 1639356630}
   tileBase: {fileID: 11400000, guid: fa71ed89fcc954fd19467c5a1011b9f6, type: 2}
+  levelInit: {fileID: 554447894}
 --- !u!4 &554447893
 Transform:
   m_ObjectHideFlags: 0
@@ -289,6 +305,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &554447894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 554447891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6777352b47e044ceada26638e2ce979, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Player: {fileID: 8840321241491348774, guid: 4410bc58760f04d599f4c967ff23812f, type: 3}
+  spawn: {x: 0, y: 0, z: 0}
+  mainCamera: {fileID: 519420031}
 --- !u!1 &1639356627
 GameObject:
   m_ObjectHideFlags: 0

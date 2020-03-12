@@ -10,15 +10,16 @@ public class Generation : MonoBehaviour
     public int maxSize = 10;
     public GameObject Room;
     private bool waitRoomsSettle = false;
-    public float settleStableTime = 2;
+    public float settleStableTime = 3;
     private float settleStableTimeHelper = 0;
     private int prevOverlaps = -1;
-    public float cull = 0.5f;
+    public float cull = 0.1f;
     private LinkedList<Vector3[]> halls = new LinkedList<Vector3[]>();
     public Tilemap tilemap;
     public TileBase tileBase;
     private Vector3Int minCell;
     private Vector3Int maxCell;
+    public LevelInit levelInit;
 
     void Start() {
         Random.InitState(System.Environment.TickCount);
@@ -31,7 +32,7 @@ public class Generation : MonoBehaviour
             while(Vector3.Distance(position,Vector3.zero) > 1)
                 position = new Vector3(Random.Range(-1f,1f),Random.Range(-1f,1f),0);
             GameObject room = GameObject.Instantiate(Room,position,new Quaternion());
-            room.GetComponent<BoxCollider2D>().size = new Vector2(Random.Range(minSize,maxSize+2), Random.Range(minSize,maxSize));
+            room.GetComponent<BoxCollider2D>().size = new Vector2(Random.Range(minSize+1,maxSize+2), Random.Range(minSize+1,maxSize+2));
             room.transform.parent = transform;
         }
         waitRoomsSettle = true;
@@ -41,15 +42,26 @@ public class Generation : MonoBehaviour
         for(int i = transform.childCount-1; i >= 0; i--) {
             if(Random.Range(0,1f) <= cull)
                 DestroyImmediate(transform.GetChild(i).gameObject);
-            else
-                transform.GetChild(i).GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+            else {
+                BoxCollider2D collider2D = transform.GetChild(i).GetComponent<BoxCollider2D>();
+                collider2D.attachedRigidbody.bodyType = RigidbodyType2D.Static;
+                collider2D.isTrigger = true;
+                collider2D.size += new Vector2(-1,-1);
+                float xCenter = (Mathf.Floor(collider2D.bounds.max.x) + Mathf.Floor(collider2D.bounds.min.x))/2;
+                float yCenter = (Mathf.Floor(collider2D.bounds.max.y) + Mathf.Floor(collider2D.bounds.min.y))/2;
+                transform.GetChild(i).position = new Vector3(xCenter,yCenter,0);
+            }
         }
         FillWorld();
         GenerateHalls();
         DrawRooms();
         DrawHalls();
+        levelInit.CreateSpawn();
+        levelInit.SpawnPlayer();
+        /*
         for(int i = transform.childCount-1; i >= 0; i--)
             DestroyImmediate(transform.GetChild(i).gameObject);
+        */
     }
 
     void FillWorld() {
@@ -62,8 +74,8 @@ public class Generation : MonoBehaviour
         }
         minCell = Vector3Int.FloorToInt(min);
         maxCell = Vector3Int.FloorToInt(max);
-        for(int x = minCell.x; x <= maxCell.x; x++)
-            for(int y = minCell.y; y <= maxCell.y; y++)
+        for(int x = minCell.x-1; x <= maxCell.x; x++)
+            for(int y = minCell.y-1; y <= maxCell.y; y++)
                 tilemap.SetTile(new Vector3Int(x,y,0), tileBase);
     }
 
@@ -93,7 +105,6 @@ public class Generation : MonoBehaviour
             halls.Last.Value[1] = minPos;
             positions.Remove(minPos);
         }
-        DrawRooms();
     }
 
     void DrawRooms() {
@@ -101,8 +112,8 @@ public class Generation : MonoBehaviour
             Bounds bounds = transform.GetChild(i).GetComponent<Collider2D>().bounds;
             Vector3Int min = tilemap.WorldToCell(bounds.min);
             Vector3Int max = tilemap.WorldToCell(bounds.max);
-            for(int x = min.x+1; x < max.x; x++)
-                for(int y = min.y+1; y < max.y; y++)
+            for(int x = min.x; x < max.x; x++)
+                for(int y = min.y; y < max.y; y++)
                     tilemap.SetTile(new Vector3Int(x,y,0), null);
         }
     }
@@ -111,16 +122,24 @@ public class Generation : MonoBehaviour
         foreach(Vector3[] hall in halls) {
             Vector3Int room1 = Vector3Int.RoundToInt(hall[0]);
             Vector3Int room2 = Vector3Int.RoundToInt(hall[1]);
-            if(Random.Range(0,2) == 0) {
-                for(int x = room1.x; x != room2.x; x += (int)Mathf.Sign(room2.x-room1.x))
+            if(Random.value < 0.5) {
+                for(int x = room1.x; x != room2.x+(int)Mathf.Sign(room2.x-room1.x); x += (int)Mathf.Sign(room2.x-room1.x)) {
                     tilemap.SetTile(new Vector3Int(x,room1.y,0), null);
-                for(int y = room1.y; y != room2.y; y += (int)Mathf.Sign(room2.y-room1.y))
+                    tilemap.SetTile(new Vector3Int(x,room1.y-1,0), null);
+                }
+                for(int y = room1.y; y != room2.y+(int)Mathf.Sign(room2.y-room1.y); y += (int)Mathf.Sign(room2.y-room1.y)) {
                     tilemap.SetTile(new Vector3Int(room2.x,y,0), null);
+                    tilemap.SetTile(new Vector3Int(room2.x-1,y,0), null);
+                }
             } else {
-                for(int y = room1.y; y != room2.y; y += (int)Mathf.Sign(room2.y-room1.y))
+                for(int y = room1.y; y != room2.y+(int)Mathf.Sign(room2.y-room1.y); y += (int)Mathf.Sign(room2.y-room1.y)) {
                     tilemap.SetTile(new Vector3Int(room1.x,y,0), null);
-                for(int x = room1.x; x != room2.x; x += (int)Mathf.Sign(room2.x-room1.x))
+                    tilemap.SetTile(new Vector3Int(room1.x-1,y,0), null);
+                }
+                for(int x = room1.x; x != room2.x+(int)Mathf.Sign(room2.x-room1.x); x += (int)Mathf.Sign(room2.x-room1.x)) {
                     tilemap.SetTile(new Vector3Int(x,room2.y,0), null);
+                    tilemap.SetTile(new Vector3Int(x,room2.y-1,0), null);
+                }
             }
         }
     }
