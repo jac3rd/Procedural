@@ -287,7 +287,7 @@ MonoBehaviour:
   maxSize: 10
   Room: {fileID: 6992125927433399654, guid: ee18e1e75f591484690ca0d299fd2276, type: 3}
   settleStableTime: 4
-  cull: 0.1
+  cull: 0
   tilemap: {fileID: 1639356630}
   tileBase: {fileID: 11400000, guid: fa71ed89fcc954fd19467c5a1011b9f6, type: 2}
   levelInit: {fileID: 554447894}

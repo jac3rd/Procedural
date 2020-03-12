@@ -13,7 +13,7 @@ public class Generation : MonoBehaviour
     public float settleStableTime = 3;
     private float settleStableTimeHelper = 0;
     private int prevOverlaps = -1;
-    public float cull = 0.1f;
+    public float cull = 0.0f;
     private LinkedList<Vector3[]> halls = new LinkedList<Vector3[]>();
     public Tilemap tilemap;
     public TileBase tileBase;
@@ -53,9 +53,9 @@ public class Generation : MonoBehaviour
             }
         }
         FillWorld();
-        GenerateHalls();
+        //GenerateHalls();
         DrawRooms();
-        DrawHalls();
+        //DrawHalls();
         levelInit.CreateSpawn();
         levelInit.SpawnPlayer();
         /*
