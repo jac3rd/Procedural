@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0, g: 0, b: 0, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -35,7 +35,7 @@ RenderSettings:
   m_DefaultReflectionMode: 0
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
-  m_ReflectionIntensity: 1
+  m_ReflectionIntensity: 0
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
   m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
@@ -193,10 +193,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 519420028}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b28b036a14704023821a6e892ec5cc5, type: 3}
+  m_Script: {fileID: 11500000, guid: 6c1ed0b158ca241e0a1151b64bac6ffe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Object: {fileID: 0}
   offset: {x: 0, y: 0, z: -10}
+  follow: 1
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0
@@ -207,7 +209,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
@@ -232,7 +234,7 @@ Camera:
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 0
-  m_HDR: 1
+  m_HDR: 0
   m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
@@ -287,10 +289,10 @@ MonoBehaviour:
   minSize: 4
   maxSize: 10
   Room: {fileID: 6992125927433399654, guid: ee18e1e75f591484690ca0d299fd2276, type: 3}
-  settleStableTime: 4
+  settleStableTime: 1
   cull: 0
-  walls: {fileID: 0}
-  backgrounds: {fileID: 1639356630}
+  walls: {fileID: 1639356630}
+  backgrounds: {fileID: 1088674440}
   tileBase: {fileID: 11400000, guid: fa71ed89fcc954fd19467c5a1011b9f6, type: 2}
   levelInit: {fileID: 554447894}
 --- !u!4 &554447893
@@ -371,7 +373,7 @@ TilemapRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 906e842215545404e82780a4e4f843fa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -488,7 +490,7 @@ TilemapRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 906e842215545404e82780a4e4f843fa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

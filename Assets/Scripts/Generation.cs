@@ -10,7 +10,7 @@ public class Generation : MonoBehaviour
     public int maxSize = 10;
     public GameObject Room;
     private bool waitRoomsSettle = false;
-    public float settleStableTime = 3;
+    public float settleStableTime = 1;
     private float settleStableTimeHelper = 0;
     private int prevOverlaps = -1;
     public float cull = 0.0f;
@@ -23,6 +23,7 @@ public class Generation : MonoBehaviour
     public LevelInit levelInit;
 
     void Start() {
+        Application.targetFrameRate = -1;
         Random.InitState(System.Environment.TickCount);
         GenerateRooms();
     }
@@ -53,7 +54,7 @@ public class Generation : MonoBehaviour
                 transform.GetChild(i).position = new Vector3(xCenter,yCenter,0);
             }
         }
-        //FillWorld();
+        FillWorld();
         GetAdjancencies();
         //GenerateHalls();
         DrawRooms();
@@ -78,8 +79,12 @@ public class Generation : MonoBehaviour
         minCell = Vector3Int.FloorToInt(min);
         maxCell = Vector3Int.FloorToInt(max);
         for(int x = minCell.x-1; x <= maxCell.x; x++)
-            for(int y = minCell.y-1; y <= maxCell.y; y++)
-                walls.SetTile(new Vector3Int(x,y,0), tileBase);
+            for(int y = minCell.y-1; y <= maxCell.y; y++) {
+                Vector3Int cellPos = new Vector3Int(x,y,0);
+                walls.SetTile(cellPos, tileBase);
+                walls.SetTileFlags(cellPos, TileFlags.None);
+                walls.SetColor(cellPos,Color.grey);
+            }
     }
 
     void GetAdjancencies() {
@@ -144,9 +149,9 @@ public class Generation : MonoBehaviour
         colorKeys[1].color = Color.blue;
         colorKeys[1].time = 1f;
         GradientAlphaKey[] alphaKeys = new GradientAlphaKey[2];
-        alphaKeys[0].alpha = 1f;
+        alphaKeys[0].alpha = 0.25f;
         alphaKeys[0].time = 0f;
-        alphaKeys[1].alpha = 1f;
+        alphaKeys[1].alpha = 0.25f;
         alphaKeys[1].time = 1f;
         gradient.SetKeys(colorKeys, alphaKeys);
         for(int i = 0; i < transform.childCount; i++) {

@@ -20,6 +20,6 @@ public class LevelInit : MonoBehaviour
 
     public void SpawnPlayer() {
         GameObject newPlayer = GameObject.Instantiate(Player, spawn, new Quaternion());
-        mainCamera.transform.parent = newPlayer.transform;
+        mainCamera.GetComponent<FollowObject>().Object = newPlayer;
     }
 }
