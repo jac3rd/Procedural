@@ -322,7 +322,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Player: {fileID: 8840321241491348774, guid: 4410bc58760f04d599f4c967ff23812f, type: 3}
+  Exit: {fileID: 6992125927433399654, guid: 5d3b2da991ef94c839eed3205b5e4da1, type: 3}
   spawn: {x: 0, y: 0, z: 0}
+  exit: {x: 0, y: 0, z: 0}
   mainCamera: {fileID: 519420031}
 --- !u!1 &1088674437
 GameObject:
